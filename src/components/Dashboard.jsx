@@ -43,7 +43,7 @@ const Dashboard = () => {
           return;
         }
 
-        const response = await fetch('http://localhost:5100/api/profile', {
+        const response = await fetch('import.meta.env.VITE_API_BASE_URL/api/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }

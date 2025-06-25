@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:5100'); // backend port
+const socket = io('import.meta.env.VITE_API_BASE_URL'); // backend port
 
 const RoomPage = () => {
   const canvasRef = useRef(null);
