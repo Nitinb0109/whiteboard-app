@@ -1,8 +1,9 @@
-// src/socket.js
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:5100', {
-  transports: ['websocket'],
+// ✅ Use deployed backend URL here:
+const socket = io("https://whiteboard-app-jhv7.onrender.com", {
+  transports: ["websocket"],
+  upgrade: false
 });
 
 export default socket;
