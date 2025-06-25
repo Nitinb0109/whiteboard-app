@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import io from 'socket.io-client';
 
-const socket = io('import.meta.env.VITE_API_BASE_URL'); // backend port
+const socket = io(import.meta.env.VITE_API_BASE_URL); // ✅ Correct usage
 
 const RoomPage = () => {
   const canvasRef = useRef(null);
@@ -12,30 +12,35 @@ const RoomPage = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!canvas) return;
 
+    const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#000000';
+    ctx.lineCap = 'round';
 
     let drawing = false;
 
+    const getPosition = (e) => {
+      return { x: e.clientX - canvas.offsetLeft, y: e.clientY - canvas.offsetTop };
+    };
+
     const startDraw = (e) => {
       drawing = true;
+      const { x, y } = getPosition(e);
       ctx.beginPath();
-      ctx.moveTo(e.clientX, e.clientY);
+      ctx.moveTo(x, y);
     };
 
     const draw = (e) => {
       if (!drawing) return;
-      ctx.lineTo(e.clientX, e.clientY);
+      const { x, y } = getPosition(e);
+      ctx.lineTo(x, y);
       ctx.stroke();
 
-      // Emit drawing data
-      socket.emit('draw', {
-        roomId,
-        x: e.clientX,
-        y: e.clientY
-      });
+      socket.emit('draw', { roomId, x, y });
     };
 
     const stopDraw = () => {
@@ -51,18 +56,33 @@ const RoomPage = () => {
     // Join room
     socket.emit('join-room', { roomId, roomType });
 
-    // Receive real-time drawing
-    socket.on('draw', (data) => {
-      ctx.lineTo(data.x, data.y);
+    // Receive draw data
+    socket.on('draw', ({ x, y }) => {
+      ctx.lineTo(x, y);
       ctx.stroke();
     });
 
+    // Cleanup
     return () => {
       socket.off('draw');
+      canvas.removeEventListener('mousedown', startDraw);
+      canvas.removeEventListener('mousemove', draw);
+      canvas.removeEventListener('mouseup', stopDraw);
+      canvas.removeEventListener('mouseout', stopDraw);
     };
   }, [roomId, roomType]);
 
-  return <canvas ref={canvasRef} style={{ display: 'block' }} />;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        display: 'block',
+        width: '100vw',
+        height: '100vh',
+        cursor: 'crosshair'
+      }}
+    />
+  );
 };
 
 export default RoomPage;

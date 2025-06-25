@@ -23,14 +23,13 @@ const SignUp = () => {
     e.preventDefault();
     setError('');
 
-    // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
     try {
-      const response = await fetch('import.meta.env.VITE_API_BASE_URL/api/signup', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -48,7 +47,6 @@ const SignUp = () => {
         throw new Error(data.message || 'Failed to sign up');
       }
 
-      // Store the token
       localStorage.setItem('token', data.token);
       navigate('/dashboard');
     } catch (error) {
@@ -100,9 +98,7 @@ const SignUp = () => {
               autoFocus
               value={formData.name}
               onChange={handleChange}
-              InputProps={{
-                sx: { textAlign: 'center' }
-              }}
+              InputProps={{ sx: { textAlign: 'center' } }}
             />
             <TextField
               margin="normal"
@@ -114,9 +110,7 @@ const SignUp = () => {
               autoComplete="email"
               value={formData.email}
               onChange={handleChange}
-              InputProps={{
-                sx: { textAlign: 'center' }
-              }}
+              InputProps={{ sx: { textAlign: 'center' } }}
             />
             <TextField
               margin="normal"
@@ -129,9 +123,7 @@ const SignUp = () => {
               autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
-              InputProps={{
-                sx: { textAlign: 'center' }
-              }}
+              InputProps={{ sx: { textAlign: 'center' } }}
             />
             <TextField
               margin="normal"
@@ -144,9 +136,7 @@ const SignUp = () => {
               autoComplete="new-password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              InputProps={{
-                sx: { textAlign: 'center' }
-              }}
+              InputProps={{ sx: { textAlign: 'center' } }}
             />
             <Button
               type="submit"

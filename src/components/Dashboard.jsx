@@ -43,7 +43,7 @@ const Dashboard = () => {
           return;
         }
 
-        const response = await fetch('import.meta.env.VITE_API_BASE_URL/api/profile', {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -82,17 +82,21 @@ const Dashboard = () => {
   ];
 
   const renderContent = () => {
-    if (!userProfile) return <Typography>Loading profile information...</Typography>;
+    if (!userProfile) {
+      return <Typography>Loading profile information...</Typography>;
+    }
 
     switch (activeSection) {
       case 'Private Room':
-        return <RoomSelection />;
+        return <RoomSelection type="private" />;
+      case 'Public Room':
+        return <RoomSelection type="public" />;
       case 'history':
-        return <Typography variant="h2">History section coming soon...</Typography>;
+        return <Typography variant="h5">History section coming soon...</Typography>;
       case 'help':
-        return <Typography variant="h2">Help section coming soon...</Typography>;
+        return <Typography variant="h5">Help section coming soon...</Typography>;
       case 'about':
-        return <Typography variant="h2">About Us section coming soon...</Typography>;
+        return <Typography variant="h5">About Us section coming soon...</Typography>;
       default:
         return (
           <Grid
@@ -104,8 +108,7 @@ const Dashboard = () => {
           >
             {[
               { label: 'Private Room', color: '#1976d2', section: 'Private Room' },
-              { label: 'Public Room', color: '#9c27b0', section: 'Public Room' },
-             
+              { label: 'Public Room', color: '#9c27b0', section: 'Public Room' }
             ].map(({ label, color, section }) => (
               <Grid item xs={12} sm={6} md={5} key={label}>
                 <Paper

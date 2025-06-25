@@ -22,7 +22,7 @@ const SignIn = () => {
     setError('');
 
     try {
-      const response = await fetch('import.meta.env.VITE_API_BASE_URL/api/signin', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/signin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -35,6 +35,7 @@ const SignIn = () => {
       if (!response.ok) {
         throw new Error(data.message || 'Failed to sign in');
       }
+
       localStorage.setItem('token', data.token);
       navigate('/dashboard');
     } catch (error) {

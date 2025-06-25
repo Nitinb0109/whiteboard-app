@@ -1,7 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Box, Typography, Button, IconButton, TextField } from '@mui/material';
-import { Undo, Redo, RadioButtonUnchecked, CropSquare, Clear, ModeEdit, Chat, Save, PictureAsPdf, ContentCopy } from '@mui/icons-material';
+import {
+  Box, Typography, Button, IconButton, TextField
+} from '@mui/material';
+import {
+  Undo, Redo, RadioButtonUnchecked, CropSquare,
+  Clear, ModeEdit, Chat, Save, PictureAsPdf, ContentCopy
+} from '@mui/icons-material';
 import socket from '../socket';
 import { jsPDF } from 'jspdf';
 import RoomFeatures from './RoomFeatures';
@@ -33,18 +38,15 @@ const WhiteboardRoom = () => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-
     canvas.width = window.innerWidth * 2;
     canvas.height = window.innerHeight * 2;
     canvas.style.width = `${window.innerWidth}px`;
     canvas.style.height = `${window.innerHeight}px`;
-
     ctx.scale(2, 2);
     ctx.lineCap = 'round';
     ctx.lineWidth = 3;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
     contextRef.current = ctx;
   }, []);
 
@@ -66,9 +68,10 @@ const WhiteboardRoom = () => {
 
   const drawFromSocket = ({ type, x0, y0, x1, y1, color }) => {
     const ctx = contextRef.current;
-    ctx.strokeStyle = color || 'black';
     ctx.beginPath();
-    if (type === 'line') {
+    ctx.strokeStyle = type === 'eraser' ? '#ffffff' : (color || '#000000');
+
+    if (type === 'pen' || type === 'line' || type === 'eraser') {
       ctx.moveTo(x0, y0);
       ctx.lineTo(x1, y1);
     } else if (type === 'rect') {
@@ -110,7 +113,7 @@ const WhiteboardRoom = () => {
     };
 
     setActions((prev) => [...prev, action]);
-    socket.emit('draw', { roomId, type: 'line', ...action });
+    socket.emit('draw', { roomId, type: tool, ...action });
 
     startX.current = offsetX;
     startY.current = offsetY;
@@ -124,13 +127,21 @@ const WhiteboardRoom = () => {
 
     if (tool === 'rect') {
       ctx.strokeRect(startX.current, startY.current, offsetX - startX.current, offsetY - startY.current);
-      socket.emit('draw', { roomId, type: 'rect', x0: startX.current, y0: startY.current, x1: offsetX, y1: offsetY, color });
+      socket.emit('draw', {
+        roomId, type: 'rect',
+        x0: startX.current, y0: startY.current,
+        x1: offsetX, y1: offsetY, color
+      });
     } else if (tool === 'circle') {
       const radius = Math.sqrt(Math.pow(offsetX - startX.current, 2) + Math.pow(offsetY - startY.current, 2));
       ctx.beginPath();
       ctx.arc(startX.current, startY.current, radius, 0, 2 * Math.PI);
       ctx.stroke();
-      socket.emit('draw', { roomId, type: 'circle', x0: startX.current, y0: startY.current, x1: offsetX, y1: offsetY, color });
+      socket.emit('draw', {
+        roomId, type: 'circle',
+        x0: startX.current, y0: startY.current,
+        x1: offsetX, y1: offsetY, color
+      });
     }
   };
 
@@ -141,6 +152,7 @@ const WhiteboardRoom = () => {
     ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     setActions([]);
     setRedoStack([]);
+    socket.emit('clear-canvas', roomId); // emit to others
   };
 
   const handleUndo = () => {
@@ -202,9 +214,13 @@ const WhiteboardRoom = () => {
   return (
     <Box sx={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: '#ffffff' }}>
       <Box sx={{ flex: 1, p: 2, maxWidth: 'calc(100vw - 320px)' }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid black', pb: 1, mb: 2 }}>
+        <Box sx={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', borderBottom: '1px solid black', pb: 1, mb: 2
+        }}>
           <Typography variant="h5">Room: {roomType}</Typography>
-          <Button variant="text" startIcon={<ContentCopy />} onClick={handleCopyLink} sx={{ color: 'black', border: '1px solid black' }}>
+          <Button variant="text" startIcon={<ContentCopy />} onClick={handleCopyLink}
+            sx={{ color: 'black', border: '1px solid black' }}>
             Copy Room Link
           </Button>
         </Box>
@@ -220,7 +236,8 @@ const WhiteboardRoom = () => {
           <IconButton onClick={handleRedo}><Redo /></IconButton>
           <IconButton onClick={handleSaveImage}><Save /></IconButton>
           <IconButton onClick={handleSavePDF}><PictureAsPdf /></IconButton>
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 40, height: 40, border: 'none' }} />
+          <input type="color" value={color} onChange={(e) => setColor(e.target.value)}
+            style={{ width: 40, height: 40, border: 'none' }} />
         </Box>
 
         <canvas
@@ -233,15 +250,25 @@ const WhiteboardRoom = () => {
         />
       </Box>
 
-      <Box sx={{ width: 300, p: 2, borderLeft: '1px solid #ccc', backgroundColor: '#f9f9f9' }}>
+      <Box sx={{
+        width: 300, p: 2, borderLeft: '1px solid #ccc',
+        backgroundColor: '#f9f9f9'
+      }}>
         <Typography variant="h6"><Chat /> Chat</Typography>
-        <Box sx={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', border: '1px solid #ccc', p: 1, mb: 1 }}>
+        <Box sx={{
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
+          border: '1px solid #ccc',
+          p: 1,
+          mb: 1
+        }}>
           {chat.map((msg, idx) => (
             <Typography key={idx} variant="body2">{msg}</Typography>
           ))}
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <TextField size="small" value={message} onChange={(e) => setMessage(e.target.value)} fullWidth />
+          <TextField size="small" value={message}
+            onChange={(e) => setMessage(e.target.value)} fullWidth />
           <Button variant="contained" onClick={handleChatSend}>Send</Button>
         </Box>
       </Box>

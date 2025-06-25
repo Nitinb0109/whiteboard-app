@@ -9,12 +9,14 @@ const RoomFeatures = ({ roomId }) => {
   useEffect(() => {
     socket.emit('get-users', roomId);
 
-    socket.on('room-users', (userList) => {
+    const handleUsersUpdate = (userList) => {
       setUsers(userList);
-    });
+    };
+
+    socket.on('room-users', handleUsersUpdate);
 
     return () => {
-      socket.off('room-users');
+      socket.off('room-users', handleUsersUpdate);
     };
   }, [roomId]);
 
@@ -25,19 +27,41 @@ const RoomFeatures = ({ roomId }) => {
   };
 
   return (
-    <Box sx={{ p: 2, border: '1px solid #888', borderRadius: 2, backgroundColor: '#222' }}>
-      <Typography variant="h6" sx={{ color: '#fff' }}>Room Settings</Typography>
+    <Box
+      sx={{
+        p: 2,
+        border: '1px solid #888',
+        borderRadius: 2,
+        backgroundColor: '#1e1e1e',
+        color: '#fff',
+        mt: 2
+      }}
+    >
+      <Typography variant="h6">Room Settings</Typography>
+
       <FormControlLabel
-        control={<Switch checked={isEditor} onChange={handleRoleToggle} color="primary" />}
+        control={
+          <Switch
+            checked={isEditor}
+            onChange={handleRoleToggle}
+            color="primary"
+          />
+        }
         label={isEditor ? 'Editor Mode' : 'View-Only Mode'}
-        sx={{ color: '#fff' }}
       />
 
-      <Typography variant="body1" sx={{ mt: 2, color: '#fff' }}>Users in Room:</Typography>
-      <List dense sx={{ color: '#fff' }}>
-        {users.map((user, idx) => (
-          <ListItem key={idx}>
-            <ListItemText primary={user.name} secondary={user.role} />
+      <Typography variant="subtitle1" sx={{ mt: 2 }}>
+        Users in Room:
+      </Typography>
+      <List dense>
+        {users.map((user) => (
+          <ListItem key={user.id}>
+            <ListItemText
+              primary={user.name}
+              secondary={`Role: ${user.role}`}
+              primaryTypographyProps={{ color: '#fff' }}
+              secondaryTypographyProps={{ color: 'gray' }}
+            />
           </ListItem>
         ))}
       </List>
