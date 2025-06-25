@@ -3,7 +3,10 @@ const { Server } = require("socket.io");
 function socketConnection(server) {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5100", // Frontend URL
+      origin: [
+        "http://localhost:5100", // for development
+        "https://fantastic-daifuku-ac9422.netlify.app" // for production
+      ],
       methods: ["GET", "POST"]
     }
   });
@@ -26,9 +29,8 @@ function socketConnection(server) {
       console.log(`${socket.id} (${user}) joined room ${roomId}`);
     });
 
-    // 🔧 FIX: Forward draw events properly
-    socket.on("draw", ({ roomId, ...drawData }) => {
-      socket.to(roomId).emit("draw", drawData);
+    socket.on("draw", ({ roomId, ...data }) => {
+      socket.to(roomId).emit("draw", data);
     });
 
     socket.on("clear-canvas", (roomId) => {
@@ -56,7 +58,7 @@ function socketConnection(server) {
     socket.on("disconnect", () => {
       const { roomId } = socket;
       if (roomId && roomUsers[roomId]) {
-        roomUsers[roomId] = roomUsers[roomId].filter(u => u.id !== socket.id);
+        roomUsers[roomId] = roomUsers[roomId].filter((u) => u.id !== socket.id);
         io.to(roomId).emit("room-users", roomUsers[roomId]);
       }
       console.log("User disconnected:", socket.id);
